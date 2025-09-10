@@ -1,0 +1,6 @@
+import express from 'express'; import { authGuard } from '../middleware/auth.js'; import { Budget } from '../models/Budget.js'; import { Expense } from '../models/Expense.js';
+const router = express.Router();
+router.get('/', authGuard, async (req,res)=>{ const items = await Budget.find({ userId:req.user.id }).sort({ month:-1 }); res.json(items); });
+router.post('/', authGuard, async (req,res)=>{ const { month, limit } = req.body; const item = await Budget.findOneAndUpdate({ userId:req.user.id, month }, { userId:req.user.id, month, limit }, { upsert:true, new:true, setDefaultsOnInsert:true }); res.status(201).json(item); });
+router.get('/:month/summary', authGuard, async (req,res)=>{ const month = req.params.month; const start = new Date(`${month}-01T00:00:00.000Z`); const end = new Date(start); end.setMonth(end.getMonth()+1); const expenses = await Expense.find({ userId:req.user.id, date:{ $gte: start, $lt: end }, kind:'expense' }); const spent = expenses.reduce((s,e)=> s + (e.amount||0), 0); const budget = await Budget.findOne({ userId:req.user.id, month }); const limit = budget?.limit || 0; res.json({ month, limit, spent, remaining: Math.max(limit-spent,0), nearing: limit>0 && spent/limit >= 0.8 }); });
+export default router;

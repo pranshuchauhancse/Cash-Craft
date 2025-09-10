@@ -1,0 +1,20 @@
+{
+  "name": "cashcraft_full",
+  "version": "1.0.0",
+  "description": "## Setup (local) 1. Install Node & MongoDB. 2. Copy `backend/.env.sample` to `backend/.env` and update the values. 3. From `cashcraft/backend` run:    - `npm install`    - `npm run dev` (or `npm start`) 4. Serve frontend by opening `cashcraft/frontend/public/index.html` in browser or configure express to serve static files.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "server": "cd backend && npm start",
+    "client": "cd frontend && npm start",
+    "start": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
