@@ -1,4 +1,5 @@
 🔹 Cash Craft – A Smart Budgeting and Savings Planner (MERN Stack)
+
 📌 Description
 
 Cash Craft is a full-stack web application built with the MERN stack (MongoDB, Express.js, React, Node.js) that helps users track expenses, plan budgets, and save money efficiently.
