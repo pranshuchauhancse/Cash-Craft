@@ -1,32 +1,11 @@
-🔹 Cash Craft – A Smart Budgeting and Savings Planner (MERN Stack)
+# CashCraft — Smart Budgeting and Savings Planner (MVP)
 
-📌 Description
+## Setup (local)
+1. Install Node & MongoDB.
+2. Copy `backend/.env.sample` to `backend/.env` and update the values.
+3. From `cashcraft/backend` run:
+   - `npm install`
+   - `npm run dev` (or `npm start`)
+4. Serve frontend by opening `cashcraft/frontend/public/index.html` in browser or configure express to serve static files.
 
-Cash Craft is a full-stack web application built with the MERN stack (MongoDB, Express.js, React, Node.js) that helps users track expenses, plan budgets, and save money efficiently.
-It provides interactive dashboards, category-wise expense analysis, and smart savings suggestions to promote better financial habits.
-
-🚀 Features
-
-💸 Add, Edit, and Delete Transactions – Track daily income & expenses
-
-📊 Dashboard & Charts – Visualize spending patterns with graphs
-
-🗂️ Category-Wise Expense Management – Food, Travel, Shopping, Bills, etc.
-
-🎯 Smart Budget Planning – Set monthly budgets and monitor overspending
-
-🔔 Alerts & Notifications – Get notified when approaching budget limits
-
-🌙 Dark Mode Support – For modern and clean user experience
-
-🛠️ Tech Stack
-
-Frontend: React.js, Tailwind CSS / Material UI
-
-Backend: Node.js, Express.js
-
-Database: MongoDB (Mongoose ODM)
-
-Authentication: JWT / OAuth
-
-Charts: Recharts / Chart.js
+Notes: This is an MVP. Currency rates are local in `utils/currency.js`. Replace fetch logic with a live API for production.

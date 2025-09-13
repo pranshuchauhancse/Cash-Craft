@@ -21,9 +21,12 @@ async function updateRatesFromAPI() {
   // OPTIONAL: Attempt to fetch from free API exchangerate.host
   try {
     const res = await fetch(`https://api.exchangerate.host/latest?base=${BASE}`);
+    
     if (!res.ok) return;
+    
     const data = await res.json();
     rates = { ...data.rates, [BASE]: 1 };
+    
     console.log('Rates updated from exchangerate.host');
   } catch (err) {
     console.warn('Could not fetch live rates, using local rates');
@@ -37,14 +40,21 @@ function getRates() {
 function convert(amount, fromCurrency, toCurrency) {
   fromCurrency = fromCurrency.toUpperCase();
   toCurrency = toCurrency.toUpperCase();
+  
   if (fromCurrency === toCurrency) return Number(amount);
-  // convert from 'fromCurrency' to base, then to 'toCurrency'
+  
+  // Convert from 'fromCurrency' to base, then to 'toCurrency'
   const rateFrom = rates[fromCurrency];
   const rateTo = rates[toCurrency];
-  if (!rateFrom || !rateTo) throw new Error('Unsupported currency code');
+  
+  if (!rateFrom || !rateTo) {
+    throw new Error('Unsupported currency code');
+  }
+  
   // amount in base = amount / rateFrom
   const amountInBase = Number(amount) / rateFrom;
   const converted = amountInBase * rateTo;
+  
   return Number(converted);
 }
 

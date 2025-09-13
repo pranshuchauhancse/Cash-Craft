@@ -10,13 +10,17 @@ const bcrypt = require('bcryptjs');
 
 const run = async () => {
   await connectDB();
+  
   try {
+    // Clear existing data
     await User.deleteMany({});
     await Expense.deleteMany({});
 
+    // Create password hash
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash('password123', salt);
 
+    // Create demo user
     const user = new User({
       name: 'Demo User',
       email: 'demo@cashcraft.com',
@@ -26,13 +30,33 @@ const run = async () => {
     });
     await user.save();
 
+    // Create sample expenses
     const sampleExpenses = [
-      { user: user._id, amountBase: 5, originalAmount: 400, originalCurrency: 'INR', category: 'Food', note: 'Lunch', date: new Date() },
-      { user: user._id, amountBase: 2, originalAmount: 150, originalCurrency: 'INR', category: 'Transport', note: 'Taxi', date: new Date() }
+      {
+        user: user._id,
+        amountBase: 5,
+        originalAmount: 400,
+        originalCurrency: 'INR',
+        category: 'Food',
+        note: 'Lunch',
+        date: new Date()
+      },
+      {
+        user: user._id,
+        amountBase: 2,
+        originalAmount: 150,
+        originalCurrency: 'INR',
+        category: 'Transport',
+        note: 'Taxi',
+        date: new Date()
+      }
     ];
+    
     await Expense.insertMany(sampleExpenses);
+    
     console.log('Seed complete');
     process.exit(0);
+    
   } catch (err) {
     console.error(err);
     process.exit(1);
