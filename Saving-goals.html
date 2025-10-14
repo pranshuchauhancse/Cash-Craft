@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Savings Goal - Cash Craft</title>
+    <link rel="stylesheet" href="modal-styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="modal-overlay" id="savingsGoalModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Create Savings Goal</h2>
+                <button class="close-btn" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="savingsGoalForm" class="modal-form">
+                <div class="form-group">
+                    <label for="goalTitle">Goal Title *</label>
+                    <input type="text" id="goalTitle" placeholder="e.g., Emergency Fund, Vacation, New Car" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="targetAmount">Target Amount *</label>
+                        <input type="number" id="targetAmount" placeholder="0.00" step="0.01" min="0" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="currentAmount">Current Amount</label>
+                        <input type="number" id="currentAmount" placeholder="0.00" step="0.01" min="0" value="0">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="targetDate">Target Date *</label>
+                        <input type="date" id="targetDate" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="goalCategory">Category</label>
+                        <select id="goalCategory">
+                            <option value="Emergency Fund">Emergency Fund</option>
+                            <option value="Vacation">Vacation</option>
+                            <option value="Vehicle">Vehicle</option>
+                            <option value="Home">Home</option>
+                            <option value="Education">Education</option>
+                            <option value="Investment">Investment</option>
+                            <option value="Electronics">Electronics</option>
+                            <option value="Healthcare">Healthcare</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="goalDescription">Description</label>
+                    <textarea id="goalDescription" rows="3" placeholder="Describe your savings goal and why it's important to you"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="monthlySaving">Monthly Saving Plan</label>
+                    <input type="number" id="monthlySaving" placeholder="0.00" step="0.01" min="0">
+                    <small>Suggested amount to save each month to reach your goal</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="autoSave"> 
+                        Enable automatic savings deduction
+                    </label>
+                    <small>Automatically deduct savings amount from income transactions</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="goalReminders"> 
+                        Send progress reminders
+                    </label>
+                    <small>Get notified about your progress and suggested actions</small>
+                </div>
+                
+                <div class="goal-preview" id="goalPreview" style="display: none;">
+                    <h3><i class="fas fa-target"></i> Goal Preview</h3>
+                    <div class="preview-card">
+                        <div class="preview-header">
+                            <span id="previewTitle"></span>
+                            <span class="goal-badge" id="previewCategory"></span>
+                        </div>
+                        <div class="goal-progress-section">
+                            <div class="goal-amounts">
+                                <span class="current">₹<span id="previewCurrent">0</span></span>
+                                <span class="target">₹<span id="previewTarget">0</span></span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="previewProgress"></div>
+                            </div>
+                            <div class="progress-percentage">
+                                <span id="previewPercentage">0</span>% Complete
+                            </div>
+                        </div>
+                        <div class="goal-timeline">
+                            <div class="timeline-item">
+                                <i class="fas fa-calendar"></i>
+                                <span>Target: <span id="previewDate"></span></span>
+                            </div>
+                            <div class="timeline-item">
+                                <i class="fas fa-clock"></i>
+                                <span id="previewTimeLeft"></span>
+                            </div>
+                            <div class="timeline-item" id="monthlySavingPreview" style="display: none;">
+                                <i class="fas fa-piggy-bank"></i>
+                                <span>Monthly: ₹<span id="previewMonthlySaving">0</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" id="cancelBtn">Cancel</button>
+                    <button type="submit" class="btn-primary" id="saveBtn">Create Goal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        class SavingsGoalModal {
+            constructor() {
+                this.currentGoal = null;
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.setMinDate();
+            }
+
+            setupEventListeners() {
+                // Close modal events
+                document.getElementById('closeModal').addEventListener('click', () => this.closeModal());
+                document.getElementById('cancelBtn').addEventListener('click', () => this.closeModal());
+                
+                // Click outside to close
+                document.getElementById('savingsGoalModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'savingsGoalModal') {
+                        this.closeModal();
+                    }
+                });
+
+                // Form inputs for preview and calculations
+                ['goalTitle', 'targetAmount', 'currentAmount', 'targetDate', 'goalCategory', 'monthlySaving'].forEach(id => {
+                    document.getElementById(id).addEventListener('input', () => {
+                        this.updatePreview();
+                        this.calculateMonthlySaving();
+                    });
+                });
+
+                // Form submission
+                document.getElementById('savingsGoalForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleSubmit();
+                });
+
+                // Listen for messages from parent window
+                window.addEventListener('message', (event) => {
+                    if (event.data.type === 'openSavingsGoalModal') {
+                        this.openModal(event.data.goal);
+                    }
+                });
+            }
+
+            setMinDate() {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                document.getElementById('targetDate').min = tomorrow.toISOString().split('T')[0];
+                
+                // Set default to 6 months from now
+                const sixMonthsLater = new Date();
+                sixMonthsLater.setMonth(sixMonthsLater.getMonth() + 6);
+                document.getElementById('targetDate').value = sixMonthsLater.toISOString().split('T')[0];
+            }
+
+            calculateMonthlySaving() {
+                const targetAmount = parseFloat(document.getElementById('targetAmount').value) || 0;
+                const currentAmount = parseFloat(document.getElementById('currentAmount').value) || 0;
+                const targetDate = document.getElementById('targetDate').value;
+                const monthlySavingInput = document.getElementById('monthlySaving');
+
+                if (targetAmount > 0 && targetDate && !monthlySavingInput.value) {
+                    const today = new Date();
+                    const target = new Date(targetDate);
+                    const monthsDiff = (target.getFullYear() - today.getFullYear()) * 12 + (target.getMonth() - today.getMonth());
+                    
+                    if (monthsDiff > 0) {
+                        const remainingAmount = targetAmount - currentAmount;
+                        const suggestedMonthlySaving = Math.ceil(remainingAmount / monthsDiff);
+                        monthlySavingInput.placeholder = `Suggested: ₹${suggestedMonthlySaving}`;
+                    }
+                }
+            }
+
+            updatePreview() {
+                const title = document.getElementById('goalTitle').value;
+                const targetAmount = parseFloat(document.getElementById('targetAmount').value) || 0;
+                const currentAmount = parseFloat(document.getElementById('currentAmount').value) || 0;
+                const targetDate = document.getElementById('targetDate').value;
+                const category = document.getElementById('goalCategory').value;
+                const monthlySaving = parseFloat(document.getElementById('monthlySaving').value) || 0;
+
+                if (title && targetAmount > 0) {
+                    document.getElementById('goalPreview').style.display = 'block';
+                    
+                    // Update preview content
+                    document.getElementById('previewTitle').textContent = title;
+                    document.getElementById('previewCategory').textContent = category;
+                    document.getElementById('previewCurrent').textContent = currentAmount.toLocaleString();
+                    document.getElementById('previewTarget').textContent = targetAmount.toLocaleString();
+                    
+                    // Calculate and update progress
+                    const percentage = targetAmount > 0 ? Math.min((currentAmount / targetAmount) * 100, 100) : 0;
+                    document.getElementById('previewProgress').style.width = `${percentage}%`;
+                    document.getElementById('previewPercentage').textContent = percentage.toFixed(1);
+                    
+                    // Update date and time left
+                    if (targetDate) {
+                        const target = new Date(targetDate);
+                        document.getElementById('previewDate').textContent = target.toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        });
+                        
+                        const today = new Date();
+                        const timeDiff = target - today;
+                        const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+                        
+                        let timeLeftText = '';
+                        if (daysLeft < 0) {
+                            timeLeftText = 'Overdue';
+                        } else if (daysLeft === 0) {
+                            timeLeftText = 'Due today';
+                        } else if (daysLeft < 30) {
+                            timeLeftText = `${daysLeft} days left`;
+                        } else {
+                            const monthsLeft = Math.floor(daysLeft / 30);
+                            const remainingDays = daysLeft % 30;
+                            timeLeftText = `${monthsLeft} months${remainingDays > 0 ? ` ${remainingDays} days` : ''} left`;
+                        }
+                        
+                        document.getElementById('previewTimeLeft').textContent = timeLeftText;
+                    }
+                    
+                    // Show monthly saving if specified
+                    if (monthlySaving > 0) {
+                        document.getElementById('monthlySavingPreview').style.display = 'flex';
+                        document.getElementById('previewMonthlySaving').textContent = monthlySaving.toLocaleString();
+                    } else {
+                        document.getElementById('monthlySavingPreview').style.display = 'none';
+                    }
+                } else {
+                    document.getElementById('goalPreview').style.display = 'none';
+                }
+            }
+
+            openModal(goal = null) {
+                this.currentGoal = goal;
+                
+                if (goal) {
+                    // Edit mode
+                    document.getElementById('modalTitle').textContent = 'Edit Savings Goal';
+                    document.getElementById('saveBtn').textContent = 'Update Goal';
+                    this.populateForm(goal);
+                } else {
+                    // Add mode
+                    document.getElementById('modalTitle').textContent = 'Create Savings Goal';
+                    document.getElementById('saveBtn').textContent = 'Create Goal';
+                    this.resetForm();
+                }
+                
+                document.getElementById('savingsGoalModal').style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+                this.updatePreview();
+            }
+
+            closeModal() {
+                document.getElementById('savingsGoalModal').style.display = 'none';
+                document.body.style.overflow = 'auto';
+                this.resetForm();
+                this.currentGoal = null;
+            }
+
+            populateForm(goal) {
+                document.getElementById('goalTitle').value = goal.title;
+                document.getElementById('targetAmount').value = goal.targetAmount;
+                document.getElementById('currentAmount').value = goal.currentAmount || 0;
+                document.getElementById('targetDate').value = goal.targetDate;
+                document.getElementById('goalCategory').value = goal.category || 'Other';
+                document.getElementById('goalDescription').value = goal.description || '';
+                document.getElementById('monthlySaving').value = goal.monthlySaving || '';
+                document.getElementById('autoSave').checked = goal.autoSave || false;
+                document.getElementById('goalReminders').checked = goal.reminders || false;
+            }
+
+            resetForm() {
+                document.getElementById('savingsGoalForm').reset();
+                this.setMinDate();
+                document.getElementById('goalPreview').style.display = 'none';
+            }
+
+            handleSubmit() {
+                const formData = this.getFormData();
+                
+                if (!this.validateForm(formData)) {
+                    return;
+                }
+
+                // Send data back to parent window
+                const message = {
+                    type: 'savingsGoalSubmit',
+                    data: {
+                        ...formData,
+                        id: this.currentGoal ? this.currentGoal.id : Date.now(),
+                        isEdit: !!this.currentGoal
+                    }
+                };
+
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage(message, '*');
+                } else {
+                    // If not in iframe, handle locally (for standalone testing)
+                    console.log('Savings goal data:', message.data);
+                    this.showNotification('Savings goal created successfully!', 'success');
+                }
+
+                this.closeModal();
+            }
+
+            getFormData() {
+                return {
+                    title: document.getElementById('goalTitle').value.trim(),
+                    targetAmount: parseFloat(document.getElementById('targetAmount').value),
+                    currentAmount: parseFloat(document.getElementById('currentAmount').value) || 0,
+                    targetDate: document.getElementById('targetDate').value,
+                    category: document.getElementById('goalCategory').value,
+                    description: document.getElementById('goalDescription').value.trim(),
+                    monthlySaving: parseFloat(document.getElementById('monthlySaving').value) || null,
+                    autoSave: document.getElementById('autoSave').checked,
+                    reminders: document.getElementById('goalReminders').checked,
+                    createdAt: new Date().toISOString()
+                };
+            }
+
+            validateForm(data) {
+                if (!data.title) {
+                    this.showNotification('Please enter a goal title', 'error');
+                    return false;
+                }
+
+                if (!data.targetAmount || data.targetAmount <= 0) {
+                    this.showNotification('Please enter a valid target amount', 'error');
+                    return false;
+                }
+
+                if (data.currentAmount >= data.targetAmount) {
+                    this.showNotification('Current amount cannot be greater than or equal to target amount', 'error');
+                    return false;
+                }
+
+                if (!data.targetDate) {
+                    this.showNotification('Please select a target date', 'error');
+                    return false;
+                }
+
+                const targetDate = new Date(data.targetDate);
+                const today = new Date();
+                if (targetDate <= today) {
+                    this.showNotification('Target date must be in the future', 'error');
+                    return false;
+                }
+
+                return true;
+            }
+
+            showNotification(message, type = 'info') {
+                // Create notification element
+                const notification = document.createElement('div');
+                notification.className = `notification notification-${type}`;
+                notification.innerHTML = `
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                    <span>${message}</span>
+                `;
+
+                document.body.appendChild(notification);
+
+                // Show notification
+                setTimeout(() => notification.classList.add('show'), 100);
+
+                // Hide and remove notification
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    setTimeout(() => notification.remove(), 300);
+                }, 3000);
+            }
+        }
+
+        // Initialize the modal
+        const savingsGoalModal = new SavingsGoalModal();
+    </script>
+
+    <style>
+        .goal-preview {
+            background: var(--bg-tertiary, #f1f5f9);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border: 2px dashed var(--success-color, #10b981);
+        }
+
+        .goal-preview h3 {
+            color: var(--text-primary, #1e293b);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .preview-card {
+            background: var(--bg-primary, #ffffff);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .preview-header span:first-child {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary, #1e293b);
+        }
+
+        .goal-badge {
+            background: var(--success-color, #10b981);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .goal-progress-section {
+            margin-bottom: 1rem;
+        }
+
+        .goal-amounts {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .goal-amounts .current {
+            color: var(--success-color, #10b981);
+            font-weight: 600;
+        }
+
+        .goal-amounts .target {
+            color: var(--text-secondary, #64748b);
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            background: var(--bg-tertiary, #f1f5f9);
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, var(--success-color, #10b981), #34d399);
+            transition: width 0.3s ease;
+            border-radius: 6px;
+        }
+
+        .progress-percentage {
+            text-align: center;
+            color: var(--success-color, #10b981);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .goal-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-secondary, #64748b);
+            font-size: 0.9rem;
+        }
+
+        .timeline-item i {
+            color: var(--primary-color, #6366f1);
+            width: 16px;
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 0.25rem;
+            color: var(--text-secondary, #64748b);
+            font-size: 0.8rem;
+        }
+
+        .form-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+    </style>
+</body>
+</html>
