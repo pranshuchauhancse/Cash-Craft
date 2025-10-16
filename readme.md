@@ -1,3 +1,4 @@
+git status
 # Cash Craft - Personal Finance Manager
 
 A comprehensive personal finance management web application built with HTML, CSS, and JavaScript. Cash Craft helps you track income, expenses, set budgets, and achieve your savings goals with an intuitive and modern interface.
