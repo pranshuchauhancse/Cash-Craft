@@ -1,5 +1,62 @@
-import React,{useEffect,useState} from 'react'; import { API } from '../api';
-export default function Expenses(){ const [list,setList]=useState([]); const [form,setForm]=useState({amount:'',category:'',kind:'expense',note:'',date:''});
-  useEffect(()=>load(),[]); async function load(){ const { data } = await API.get('/expenses'); setList(data) }
-  async function add(e){ e.preventDefault(); await API.post('/expenses',{...form, amount:Number(form.amount)}); setForm({amount:'',category:'',kind:'expense',note:'',date:''}); load(); }
-  return (<div><div className="card" style={{marginBottom:12}}><h3>Add transaction</h3><form onSubmit={add} style={{display:'grid',gap:8}}><input className="input" placeholder="Amount" value={form.amount} onChange={e=>setForm(f=>({...f, amount:e.target.value}))} /><input className="input" placeholder="Category" value={form.category} onChange={e=>setForm(f=>({...f, category:e.target.value}))} /><select className="input" value={form.kind} onChange={e=>setForm(f=>({...f, kind:e.target.value}))}><option value="expense">Expense</option><option value="income">Income</option></select><input className="input" placeholder="Note" value={form.note} onChange={e=>setForm(f=>({...f, note:e.target.value}))} /><button className="btn">Add</button></form></div><div className="card table"><h3>Transactions</h3><table><thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Amount</th></tr></thead><tbody>{list.map(it=>(<tr key={it._id}><td>{new Date(it.date).toLocaleDateString()}</td><td className="badge">{it.kind}</td><td>{it.category}</td><td>₹{it.amount}</td></tr>))}</tbody></table></div></div>) }
+import React, { useEffect, useState } from 'react';
+import ExpenseForm from '../components/ExpenseForm';
+
+export default function Expenses() {
+  
+  const [expenses, setExpenses] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('cc_expenses')) || [];
+    } catch {
+      return [];
+    }
+  });
+
+  
+  useEffect(() => {
+    localStorage.setItem('cc_expenses', JSON.stringify(expenses));
+  }, [expenses]);
+
+  
+  const addExpense = (expense) => setExpenses((prev) => [expense, ...prev]);
+
+  
+  const removeExpense = (id) =>
+    setExpenses((prev) => prev.filter((x) => x.id !== id));
+
+  return (
+    <div className="page">
+      <h2>Expenses</h2>
+
+      {/* Expense Form */}
+      <ExpenseForm onAdd={addExpense} />
+
+      {/* Expenses List */}
+      <div className="list">
+        {expenses.length === 0 && (
+          <p className="muted">No expenses yet — add your first one.</p>
+        )}
+
+        {expenses.map((exp) => (
+          <div className="card list-item" key={exp.id}>
+            <div>
+              <strong>{exp.name}</strong>
+              <div className="muted">
+                {exp.category} • {exp.date}
+              </div>
+            </div>
+
+            <div className="row">
+              <div className="amount">${exp.amount.toFixed(2)}</div>
+              <button
+                className="btn-del"
+                onClick={() => removeExpense(exp.id)}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

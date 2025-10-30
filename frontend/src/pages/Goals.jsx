@@ -1,5 +1,85 @@
-import React,{useEffect,useState} from 'react'; import { API } from '../api';
-export default function Goals(){ const [list,setList]=useState([]); const [form,setForm]=useState({title:'',target:'',saved:''});
-  useEffect(()=>load(),[]); async function load(){ const { data } = await API.get('/goals'); setList(data) }
-  async function add(e){ e.preventDefault(); await API.post('/goals',{title:form.title,target:Number(form.target),saved:Number(form.saved||0)}); setForm({title:'',target:'',saved:''}); load(); }
-  return (<div><div className="card" style={{marginBottom:12}}><h3>Add saving goal</h3><form onSubmit={add} style={{display:'grid',gap:8}}><input className="input" placeholder="Goal" value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))} /><input className="input" placeholder="Target" value={form.target} onChange={e=>setForm(f=>({...f,target:e.target.value}))} /><input className="input" placeholder="Saved so far" value={form.saved} onChange={e=>setForm(f=>({...f,saved:e.target.value}))} /><button className="btn">Add</button></form></div><div className="card table"><h3>Your goals</h3><table><thead><tr><th>Title</th><th>Target</th><th>Saved</th><th>Progress</th></tr></thead><tbody>{list.map(g=>{ const pct = Math.min(100, Math.round((g.saved/g.target)*100)); return (<tr key={g._id}><td>{g.title}</td><td>₹{g.target}</td><td>₹{g.saved}</td><td><span className="badge">{pct}%</span></td></tr>) })}</tbody></table></div></div>) }
+import React, { useEffect, useState } from 'react';
+import GoalCard from '../components/GoalCard';
+
+export default function Goals() {
+  
+  const [goals, setGoals] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('cc_goals')) || [];
+    } catch {
+      return [];
+    }
+  });
+
+  
+  const [name, setName] = useState('');
+  const [target, setTarget] = useState('');
+
+  
+  useEffect(() => {
+    localStorage.setItem('cc_goals', JSON.stringify(goals));
+  }, [goals]);
+
+  
+  const handleAddGoal = (e) => {
+    e.preventDefault();
+
+    if (!name || !target) return;
+
+    const newGoal = {
+      id: Date.now(),
+      name,
+      target: parseFloat(target),
+      saved: 0,
+    };
+
+    setGoals([newGoal, ...goals]);
+    setName('');
+    setTarget('');
+  };
+
+  // Reset all goals
+  const handleResetGoals = () => {
+    if (window.confirm('Are you sure you want to reset all goals?')) {
+      setGoals([]);
+      localStorage.removeItem('cc_goals');
+    }
+  };
+
+  return (
+    <div className="page">
+      <h2>Goals</h2>
+
+      {/* Goal Creation Form */}
+      <form className="card form-inline" onSubmit={handleAddGoal}>
+        <input
+          placeholder="Goal name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <input
+          type="number"
+          placeholder="Target amount"
+          value={target}
+          onChange={(e) => setTarget(e.target.value)}
+        />
+        <button type="submit">Create Goal</button>
+        {/* Reset Button */}
+        <button type="button" onClick={handleResetGoals} className="btn-del">
+          Reset Goals
+        </button>
+      </form>
+
+      {/* Goals List */}
+      <div className="grid-2">
+        {goals.length === 0 && (
+          <p className="muted">No goals yet. Create one to start saving.</p>
+        )}
+
+        {goals.map((g) => (
+          <GoalCard key={g.id} goal={g} />
+        ))}
+      </div>
+    </div>
+  );
+}

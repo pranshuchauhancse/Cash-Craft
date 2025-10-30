@@ -1,9 +1,133 @@
-import React, {useEffect, useState} from 'react'; import { API } from '../api'; import { Bar, Doughnut } from 'react-chartjs-2'; import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend } from 'chart.js'; ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
+import React, { useEffect, useState } from 'react';
+import { sampleExpenses, categories } from '../utils/dummyData';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from 'recharts';
+import InsightsCard from '../components/InsightsCard';
 
-export default function Dashboard(){ const [tx, setTx] = useState([]); const [budgets, setBudgets] = useState([]); const [goals, setGoals] = useState([]); const [alerts,setAlerts]=useState([]);
-  useEffect(()=>{ loadAll() },[]);
-  async function loadAll(){ try{ const { data:transactions } = await API.get('/expenses'); setTx(transactions); const { data:bd } = await API.get('/budgets'); setBudgets(bd); const { data:gs } = await API.get('/goals'); setGoals(gs); const { data:alerts } = await API.get('/notifications'); setAlerts(alerts); }catch(e){console.error(e)} }
-  const totalExpenses = tx.filter(t=>t.kind==='expense').reduce((s,i)=>s+(i.amount||0),0); const totalIncome = tx.filter(t=>t.kind==='income').reduce((s,i)=>s+(i.amount||0),0); const savings = Math.max(totalIncome - totalExpenses, 0);
-  const barData = { labels: ['Jan','Feb','Mar','Apr','May'], datasets:[{ label:'Expenses', data:[200,250,330,200,270], backgroundColor:'#2563eb' }] };
-  const dough = { labels:['Used','Remaining'], datasets:[{ data:[totalExpenses, Math.max(2000-totalExpenses,0)], backgroundColor:['#10b981','#e6f6ef'] }] };
-  return (<div><div className="top-welcome">Welcome back, {JSON.parse(localStorage.getItem('user')||'{}').name || 'User'}!</div><div className="layout-grid"><div className="card kpi"><div className="small">Total Expenses</div><div className="value">₹{totalExpenses}</div></div><div className="card kpi"><div className="small">Budget Status</div><div className="value">₹{budgets[0]?.limit || 0}</div><div className="progress" style={{marginTop:8}}><i style={{width: `${Math.min(100, totalExpenses / (budgets[0]?.limit || 1) * 100)}%`}}></i></div></div><div className="card kpi"><div className="small">Savings</div><div className="value">₹{savings}</div></div></div><div className="charts"><div className="card"><h3>Expenses</h3><Bar data={barData} /></div><div className="card"><h3>Budget</h3><Doughnut data={dough} /><div style={{textAlign:'center', marginTop:12}}><strong>₹{totalExpenses}</strong></div></div></div><div className="card table" style={{marginTop:14}}><h3>Recent Transactions</h3><table><thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Amount</th></tr></thead><tbody>{tx.slice(0,8).map(t=>(<tr key={t._id}><td>{new Date(t.date).toLocaleDateString()}</td><td className="badge">{t.kind}</td><td>{t.category}</td><td>₹{t.amount}</td></tr>))}</tbody></table></div>{alerts.length>0 && (<div className="card" style={{marginTop:12}}><h3>Notifications</h3>{alerts.map((a,i)=>(<div key={i} className="small" style={{marginBottom:8}}>{a.message}</div>))}</div>)}</div>) }
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#a28', '#888'];
+
+export default function Dashboard() {
+
+  const [expenses, setExpenses] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('cc_expenses')) || sampleExpenses;
+    } catch {
+      return sampleExpenses;
+    }
+  });
+
+
+  useEffect(() => {
+    localStorage.setItem('cc_expenses', JSON.stringify(expenses));
+  }, [expenses]);
+
+
+  const byCategory = categories
+    .map((cat) => {
+      const total = expenses
+        .filter((e) => e.category === cat)
+        .reduce((sum, i) => sum + i.amount, 0);
+      return { name: cat, value: total };
+    })
+    .filter((c) => c.value > 0);
+
+
+  const trend = [
+    { month: 'Aug', amt: 400 },
+    { month: 'Sep', amt: 800 },
+    { month: 'Oct', amt: expenses.reduce((sum, i) => sum + i.amount, 0) },
+  ];
+
+
+  const totalSpent = expenses.reduce((sum, i) => sum + i.amount, 0);
+
+
+  const topCategory = byCategory.sort((a, b) => b.value - a.value)[0]?.name || '—';
+
+  
+  const activeGoals = (JSON.parse(localStorage.getItem('cc_goals') || '[]')).length;
+
+  return (
+    <div className="page">
+      <h2>Overview</h2>
+
+      {/* Summary Cards */}
+      <div className="grid-3">
+        <div className="card">
+          <h3>Total Spent</h3>
+          <p className="big">${totalSpent.toFixed(2)}</p>
+        </div>
+
+        <div className="card">
+          <h3>Top Category</h3>
+          <p className="big">{topCategory}</p>
+        </div>
+
+        <div className="card">
+          <h3>Active Goals</h3>
+          <p className="big">{activeGoals}</p>
+        </div>
+      </div>
+
+      {/* Charts */}
+      <div className="grid-2">
+        {/* Pie Chart: Spending by Category */}
+        <div className="card chart-wrap">
+          <h4>Spending by Category</h4>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                data={byCategory}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={80}
+                label
+              >
+                {byCategory.map((entry, index) => (
+                  <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Line Chart: Monthly Trend */}
+        <div className="card chart-wrap">
+          <h4>Monthly Trend</h4>
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={trend}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Line type="monotone" dataKey="amt" stroke="#8884d8" />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Quick Tip Card */}
+      <InsightsCard title="Quick Tip">
+        <p>
+          If food spending is high, try cooking 3 times a week — small changes add up.
+        </p>
+      </InsightsCard>
+    </div>
+  );
+}

@@ -1,4 +1,50 @@
-import React, {useState} from 'react'; import { API } from '../api';
-export default function Login(){ const [email,setEmail]=useState(''); const [pwd,setPwd]=useState(''); const [err,setErr]=useState('');
-  const submit = async e => { e.preventDefault(); try{ const { data } = await API.post('/auth/login',{ email, password: pwd }); localStorage.setItem('token', data.token); localStorage.setItem('user', JSON.stringify(data.user)); window.location.href = '/'; } catch(e){ setErr(e.response?.data?.message || 'Login failed') } };
-  return (<div className="card" style={{maxWidth:480, margin:'40px auto'}}><h3>Sign in</h3>{err && <div className="badge">{err}</div>}<form onSubmit={submit} style={{display:'grid',gap:10,marginTop:10}}><input className="input" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} /><input className="input" type="password" placeholder="Password" value={pwd} onChange={e=>setPwd(e.target.value)} /><button className="btn" type="submit">Sign in</button></form></div>) }
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+
+export default function Login({ onLogin }) {
+  const [email, setEmail] = useState('');
+  const [pass, setPass] = useState('');
+  const nav = useNavigate();
+
+  // Handle login form submission
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (!email || !pass) {
+      alert('Please enter both email and password');
+      return;
+    }
+
+    const user = { email };
+    onLogin(user);
+    nav('/');
+  };
+
+  return (
+    <div className="auth-page">
+      <form className="card auth" onSubmit={handleSubmit}>
+        <h3>Login</h3>
+
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+
+        <input
+          type="password"
+          placeholder="Password"
+          value={pass}
+          onChange={(e) => setPass(e.target.value)}
+        />
+
+        <button type="submit">Login</button>
+
+        <p className="muted">
+          No account? <Link to="/signup">Signup</Link>
+        </p>
+      </form>
+    </div>
+  );
+}
