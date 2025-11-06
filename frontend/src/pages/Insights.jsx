@@ -2,42 +2,47 @@ import React from 'react';
 import InsightsCard from '../components/InsightsCard';
 
 export default function Insights() {
-  // Retrieve expenses from localStorage
   const expenses = JSON.parse(localStorage.getItem('cc_expenses') || '[]');
-
-  // Calculate totals
   const total = expenses.reduce((sum, item) => sum + item.amount, 0);
-  const food = expenses
-    .filter((e) => e.category === 'Food')
-    .reduce((sum, item) => sum + item.amount, 0);
-  const foodPct = total ? Math.round((food / total) * 100) : 0;
 
-  
+  const categoryTotals = expenses.reduce((acc, item) => {
+    acc[item.category] = (acc[item.category] || 0) + item.amount;
+    return acc;
+  }, {});
+
   return (
     <div className="page">
       <h2>Insights</h2>
 
       <div className="grid-3">
-        {/* Spending Snapshot Card */}
         <InsightsCard title="Spending Snapshot">
-          <p>Total spent: ${total.toFixed(2)}</p>
-          <p>
-            Food: ${food.toFixed(2)} ({foodPct}%)
-          </p>
+          <p><strong>Total Spent:</strong> ₹{total.toFixed(2)}</p>
+          {Object.entries(categoryTotals).map(([category, amount]) => {
+            const percentage = total ? Math.round((amount / total) * 100) : 0;
+            return (
+              <p key={category}>
+                <strong>{category}:</strong> ₹{amount.toFixed(2)} ({percentage}%)
+              </p>
+            );
+          })}
         </InsightsCard>
 
-        {/* Recommendation Card */}
-        <InsightsCard title="Recommendation">
-          <p>
-            {foodPct > 30
-              ? 'Your food spending is high. Consider meal prepping.'
-              : 'Food spending looks fine.'}
-          </p>
+        <InsightsCard title="Recommendations">
+          {Object.entries(categoryTotals).map(([category, amount]) => {
+            const percentage = total ? Math.round((amount / total) * 100) : 0;
+            return (
+              <p key={category}>
+                {percentage > 30
+                  ? `Your spending on ${category.toLowerCase()} is quite high. Try to reduce unnecessary costs.`
+                  : `Your ${category.toLowerCase()} spending looks well managed.`}
+              </p>
+            );
+          })}
         </InsightsCard>
 
-        {/* Motivation Card */}
         <InsightsCard title="Motivation">
-          <p>Small habits: Save ₹50 a day = ₹1500 a month. Start small!</p>
+          <p>💡 Small savings build big results!</p>
+          <p>Saving ₹50 every day = ₹1,500 a month. Stay consistent and watch your budget grow.</p>
         </InsightsCard>
       </div>
     </div>

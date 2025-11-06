@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import GoalCard from '../components/GoalCard';
 
 export default function Goals() {
-  
   const [goals, setGoals] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('cc_goals')) || [];
@@ -11,19 +10,15 @@ export default function Goals() {
     }
   });
 
-  
   const [name, setName] = useState('');
   const [target, setTarget] = useState('');
 
-  
   useEffect(() => {
     localStorage.setItem('cc_goals', JSON.stringify(goals));
   }, [goals]);
 
-  
   const handleAddGoal = (e) => {
     e.preventDefault();
-
     if (!name || !target) return;
 
     const newGoal = {
@@ -38,9 +33,8 @@ export default function Goals() {
     setTarget('');
   };
 
-  // Reset all goals
   const handleResetGoals = () => {
-    if (window.confirm('Are you sure you want to reset all goals?')) {
+    if (window.confirm('Reset all goals? This action cannot be undone.')) {
       setGoals([]);
       localStorage.removeItem('cc_goals');
     }
@@ -50,7 +44,6 @@ export default function Goals() {
     <div className="page">
       <h2>Goals</h2>
 
-      {/* Goal Creation Form */}
       <form className="card form-inline" onSubmit={handleAddGoal}>
         <input
           placeholder="Goal name"
@@ -63,22 +56,18 @@ export default function Goals() {
           value={target}
           onChange={(e) => setTarget(e.target.value)}
         />
-        <button type="submit">Create Goal</button>
-        {/* Reset Button */}
+        <button type="submit">Add Goal</button>
         <button type="button" onClick={handleResetGoals} className="btn-del">
-          Reset Goals
+          Reset
         </button>
       </form>
 
-      {/* Goals List */}
       <div className="grid-2">
-        {goals.length === 0 && (
-          <p className="muted">No goals yet. Create one to start saving.</p>
+        {goals.length === 0 ? (
+          <p className="muted">No goals yet — start planning your savings.</p>
+        ) : (
+          goals.map((goal) => <GoalCard key={goal.id} goal={goal} />)
         )}
-
-        {goals.map((g) => (
-          <GoalCard key={g.id} goal={g} />
-        ))}
       </div>
     </div>
   );

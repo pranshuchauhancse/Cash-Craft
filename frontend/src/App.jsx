@@ -14,11 +14,11 @@ import Insights from './pages/Insights';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 
-// Styles
+// Global Styles
 import './styles/main.css';
 
 export default function App() {
-  // Retrieve user info from localStorage on load
+  // Get user data from localStorage (if available)
   const [user, setUser] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('cc_user')) || null;
@@ -27,12 +27,12 @@ export default function App() {
     }
   });
 
-  // Persist user state whenever it changes
+  // Store user data whenever it changes
   useEffect(() => {
     localStorage.setItem('cc_user', JSON.stringify(user));
   }, [user]);
 
-  // Authentication Routes (Login / Signup)
+  // If user not logged in, show login/signup pages
   if (!user) {
     return (
       <Router>
@@ -45,18 +45,18 @@ export default function App() {
     );
   }
 
-  // Main App Layout (After Login)
+  // Main app layout after login
   return (
     <Router>
       <div className="app-shell">
-        {/* Top Navigation Bar */}
+        {/* Navbar with logout option */}
         <Navbar onLogout={() => setUser(null)} />
 
         <div className="main-area">
-          {/* Sidebar Navigation */}
+          {/* Sidebar navigation */}
           <Sidebar />
 
-          {/* Dynamic Page Content */}
+          {/* Page content area */}
           <main className="content-area">
             <Routes>
               <Route path="/" element={<Dashboard />} />

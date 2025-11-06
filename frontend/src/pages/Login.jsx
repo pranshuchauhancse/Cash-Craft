@@ -3,46 +3,48 @@ import { Link, useNavigate } from 'react-router-dom';
 
 export default function Login({ onLogin }) {
   const [email, setEmail] = useState('');
-  const [pass, setPass] = useState('');
-  const nav = useNavigate();
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
-  // Handle login form submission
-  const handleSubmit = (e) => {
+  const handleLogin = (e) => {
     e.preventDefault();
 
-    if (!email || !pass) {
-      alert('Please enter both email and password');
+    if (!email.trim() || !password.trim()) {
+      alert('Please fill in both fields to continue.');
       return;
     }
 
     const user = { email };
     onLogin(user);
-    nav('/');
+    navigate('/');
   };
 
   return (
     <div className="auth-page">
-      <form className="card auth" onSubmit={handleSubmit}>
-        <h3>Login</h3>
+      <form className="card auth" onSubmit={handleLogin}>
+        <h2 className="title">Welcome Back 👋</h2>
+        <p className="muted small">Log in to continue managing your finances effortlessly</p>
 
         <input
           type="email"
-          placeholder="Email"
+          placeholder="Enter your email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          autoComplete="email"
         />
 
         <input
           type="password"
-          placeholder="Password"
-          value={pass}
-          onChange={(e) => setPass(e.target.value)}
+          placeholder="Enter your password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          autoComplete="current-password"
         />
 
-        <button type="submit">Login</button>
+        <button type="submit" className="btn-primary">Login</button>
 
-        <p className="muted">
-          No account? <Link to="/signup">Signup</Link>
+        <p className="muted small">
+          New here? <Link to="/signup">Create an account</Link>
         </p>
       </form>
     </div>

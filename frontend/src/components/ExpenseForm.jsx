@@ -7,30 +7,35 @@ export default function ExpenseForm({ onAdd }) {
   const [category, setCategory] = useState(categories[0]);
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = (event) => {
+    event.preventDefault();
 
     if (!name.trim() || !amount) {
       setError('Please fill in both the expense name and amount.');
       return;
     }
 
-    setError('');
-    onAdd({
+    const newExpense = {
       id: Date.now(),
       name: name.trim(),
       amount: parseFloat(amount),
       category,
       date: new Date().toISOString().slice(0, 10),
-    });
+    };
 
+    onAdd(newExpense);
     setName('');
     setAmount('');
     setCategory(categories[0]);
+    setError('');
   };
 
   return (
-    <form className="card form-inline" onSubmit={handleSubmit} aria-label="Add Expense Form">
+    <form
+      className="card form-inline"
+      onSubmit={handleSubmit}
+      aria-label="Add Expense Form"
+    >
       <input
         aria-label="Expense Name"
         placeholder="Expense name"
@@ -55,16 +60,16 @@ export default function ExpenseForm({ onAdd }) {
         value={category}
         onChange={(e) => setCategory(e.target.value)}
       >
-        {categories.map((c) => (
-          <option key={c} value={c}>
-            {c}
+        {categories.map((item) => (
+          <option key={item} value={item}>
+            {item}
           </option>
         ))}
       </select>
 
       <button type="submit">Add</button>
 
-      {error && <p style={{ color: 'red', marginTop: '5px' }}>{error}</p>}
+      {error && <p style={{ color: 'red', marginTop: 5 }}>{error}</p>}
     </form>
   );
 }

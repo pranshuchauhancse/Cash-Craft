@@ -15,11 +15,9 @@ import {
 } from 'recharts';
 import InsightsCard from '../components/InsightsCard';
 
-
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#a28', '#888'];
 
 export default function Dashboard() {
-
   const [expenses, setExpenses] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('cc_expenses')) || sampleExpenses;
@@ -28,46 +26,38 @@ export default function Dashboard() {
     }
   });
 
-
   useEffect(() => {
     localStorage.setItem('cc_expenses', JSON.stringify(expenses));
   }, [expenses]);
 
-
   const byCategory = categories
-    .map((cat) => {
+    .map((category) => {
       const total = expenses
-        .filter((e) => e.category === cat)
-        .reduce((sum, i) => sum + i.amount, 0);
-      return { name: cat, value: total };
+        .filter((expense) => expense.category === category)
+        .reduce((sum, expense) => sum + expense.amount, 0);
+      return { name: category, value: total };
     })
-    .filter((c) => c.value > 0);
-
+    .filter((item) => item.value > 0);
 
   const trend = [
-    { month: 'Aug', amt: 400 },
-    { month: 'Sep', amt: 800 },
-    { month: 'Oct', amt: expenses.reduce((sum, i) => sum + i.amount, 0) },
+    { month: 'Aug', amt: 0 },
+    { month: 'Sep', amt: 0 },
+    { month: 'Oct', amt: 0 },
+    { month: 'Nov', amt: expenses.reduce((sum, expense) => sum + expense.amount, 0) },
   ];
 
-
-  const totalSpent = expenses.reduce((sum, i) => sum + i.amount, 0);
-
-
+  const totalSpent = expenses.reduce((sum, expense) => sum + expense.amount, 0);
   const topCategory = byCategory.sort((a, b) => b.value - a.value)[0]?.name || '—';
-
-  
-  const activeGoals = (JSON.parse(localStorage.getItem('cc_goals') || '[]')).length;
+  const activeGoals = JSON.parse(localStorage.getItem('cc_goals') || '[]').length;
 
   return (
     <div className="page">
       <h2>Overview</h2>
 
-      {/* Summary Cards */}
       <div className="grid-3">
         <div className="card">
           <h3>Total Spent</h3>
-          <p className="big">${totalSpent.toFixed(2)}</p>
+          <p className="big">₹{totalSpent.toFixed(2)}</p>
         </div>
 
         <div className="card">
@@ -81,9 +71,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Charts */}
       <div className="grid-2">
-        {/* Pie Chart: Spending by Category */}
         <div className="card chart-wrap">
           <h4>Spending by Category</h4>
           <ResponsiveContainer width="100%" height={250}>
@@ -107,7 +95,6 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </div>
 
-        {/* Line Chart: Monthly Trend */}
         <div className="card chart-wrap">
           <h4>Monthly Trend</h4>
           <ResponsiveContainer width="100%" height={250}>
@@ -122,10 +109,10 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Quick Tip Card */}
       <InsightsCard title="Quick Tip">
         <p>
-          If food spending is high, try cooking 3 times a week — small changes add up.
+          If food spending is high, try cooking three times a week — small changes make a big
+          difference over time.
         </p>
       </InsightsCard>
     </div>

@@ -6,12 +6,12 @@ export default function GoalCard({ goal }) {
   return (
     <div className="card goal-card">
       <h4>{goal.name}</h4>
-      <p>Target: ${goal.target.toFixed(2)}</p>
+      <p>Target: ₹{goal.target.toFixed(2)}</p>
       <p>
-        Saved: ${goal.saved.toFixed(2)} ({progress}%)
+        Saved: ₹{goal.saved.toFixed(2)} ({progress}%)
       </p>
       <div className="progress">
-        <div style={{ width: progress + '%' }} />
+        <div style={{ width: `₹{progress}%` }} />
       </div>
     </div>
   );
